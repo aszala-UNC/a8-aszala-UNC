@@ -11,43 +11,6 @@ public abstract class Event {
 	}
 }
 
-abstract class CellEvent extends Event {
-	
-	public Cell getCell() {
-		return null;
-	}
-	
-	public boolean isToggleEvent() {
-		return false;
-	}
-	
-	@Override
-	public boolean isCellEvent() {
-		return true;
-	}
-	
-}
-
-class ToggleCellEvent extends CellEvent {
-	
-	private Cell cell;
-	
-	public ToggleCellEvent(Cell cell) {
-		this.cell = cell;
-	}
-	
-	@Override
-	public Cell getCell() {
-		return cell;
-	}
-	
-	@Override
-	public boolean isToggleEvent() {
-		return true;
-	}
-	
-}
-
 abstract class UIEvent extends Event {
 	
 	public boolean isSliderEvent() {

@@ -1,5 +1,6 @@
 package a8;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,14 +15,14 @@ public class Model {
 	
 	private boolean torus = false;
 	
-	private Map<Cell, Boolean> cellMap;
+	private Map<Point, Boolean> cellMap;
 	
 	public Model() {
-		cellMap = new HashMap<Cell, Boolean>();
+		cellMap = new HashMap<Point, Boolean>();
 	}
 	
-	public synchronized void evaluateCell(Cell[][] cells, int x, int y, int total) {
-		List<Cell> neighbors = new ArrayList<>();
+	public synchronized void evaluateCell(boolean[][] cells, int x, int y, int total) {
+		List<Boolean> neighbors = new ArrayList<>();
 		
 		int px = x+1, sx = x-1;
 		int py = y+1, sy = y-1;
@@ -57,8 +58,8 @@ public class Model {
 		
 		int alive = 0;
 		
-		for (Cell c : neighbors) {
-			if (c.isAlive())
+		for (boolean c : neighbors) {
+			if (c)
 				alive++;
 		}
 		
@@ -66,7 +67,7 @@ public class Model {
 		
 		if (alive < birth)
 			shouldLive = false;
-		else if (alive == birth && !cells[x][y].isAlive())
+		else if (alive == birth && !cells[x][y])
 			shouldLive = false;
 		else if (alive == birth || alive == survive)
 			shouldLive = true;
@@ -83,11 +84,11 @@ public class Model {
 			shouldLive = false;
 		*/
 		
-		boolean toggle = !(shouldLive == cells[x][y].isAlive());
+		boolean toggle = !(shouldLive == cells[x][y]);
 		
 		count++;
 		
-		cellMap.put(cells[x][y], toggle);
+		cellMap.put(new Point(x, y), toggle);
 		
 		if (count == total)
 			notifyObserver();
@@ -112,7 +113,7 @@ public class Model {
 		this.observer = obeserver;
 	}
 	
-	public Map<Cell, Boolean> getMap() {
+	public Map<Point, Boolean> getMap() {
 		return cellMap;
 	}
 	

@@ -4,11 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -29,9 +32,9 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	
 	private int width = 10, height = width;
 	
-	private static final int MAX_WIDTH = 500, MAX_HEIGHT = 500;
+	private static final int MAX_WIDTH = 1000, MAX_HEIGHT = 1000;
 	
-	private Cell[][] cells;
+	private boolean[][] cells;
 	
 	private CellViewListener listener;
 	
@@ -73,8 +76,46 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		JLabel widthText = new JLabel("Grid Width (10-500):");
 		JLabel heightText = new JLabel("Grid Height (10-500):");
 		
-		cellPanel = new JPanel();
-		cellPanel.setBackground(Color.white);
+		cellPanel = new JPanel() {
+			@Override
+			public void paintComponent(Graphics g) {
+				Graphics2D g2d = (Graphics2D)g;
+
+				Dimension size = new Dimension(MAX_WIDTH / width, MAX_HEIGHT / height);
+				
+				int x = 0, y = 0;
+				
+		        for (int i=0;i<width;i++) {
+					for (int j=0;j<height;j++) {
+						if (cells[i][j])
+							g2d.setColor(Color.black);
+						else
+							g2d.setColor(Color.white);
+						
+						g2d.fillRect(x, y, (int)size.getWidth(), (int)size.getHeight());
+						g2d.setColor(Color.gray);
+						g2d.drawRect(x, y, (int)size.getWidth(), (int)size.getHeight());
+						
+						x += (int)size.getWidth();
+					}
+					
+					y += (int)size.getHeight();
+					x = 0;
+		        }
+			}
+		};
+		cellPanel.setBackground(Color.black);
+		cellPanel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int mx = e.getX(), my = e.getY();
+				int i = mx / (MAX_WIDTH / width), j = my / (MAX_HEIGHT / height);
+				
+				cells[j][i] = !cells[j][i];
+				
+				cellPanel.repaint();
+			}
+		});
 		
 		controls = new JPanel();
 		controls.setPreferredSize(new Dimension(200, MAX_HEIGHT));
@@ -167,23 +208,24 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		this.width = width;
 		this.height = height;
 		
-		cells = new Cell[width][height];
+		cells = new boolean[width][height];
 		
 		populateGrid();
 	}
 	
 	private synchronized void populateGrid() {
-		cellPanel.removeAll();
+		/*cellPanel.removeAll();
 		
 		cellPanel.setLayout(new GridLayout(height, width));
-		cellPanel.setPreferredSize(new Dimension(MAX_WIDTH, MAX_HEIGHT));
-		cellPanel.setBackground(Color.black);
 		
+		cellPanel.setBackground(Color.black);
+		*/
+		cellPanel.setPreferredSize(new Dimension(MAX_WIDTH, MAX_HEIGHT));
 		cellPanel.repaint();
 		repaint();
 		Main.main_frame.revalidate();
 		
-		final ActionListener a = this;
+		//final ActionListener a = this;
 		
 		rename.setVisible(true);
 		
@@ -193,11 +235,9 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		Thread loadingThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				Dimension size = new Dimension(MAX_WIDTH / width, MAX_HEIGHT / height);
-				
 		        for (int i=0;i<width;i++) {
 					for (int j=0;j<height;j++) {
-						Cell c = new Cell();
+						/*Cell c = new Cell();
 						c.addActionListener(a);
 						
 						c.setPreferredSize(size);
@@ -207,8 +247,8 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 					    c.setBorderPainted(false);
 					    
 					    cellPanel.add(c);
-					    
-					    cells[i][j] = c;
+					    */
+					    cells[i][j] = false;
 					}
 				}
 		        
@@ -225,14 +265,12 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		});
 		loadingThread.start();
 	}
-	
+
 	public void toggleCell(int x, int y) {
-		toggleCell(cells[x][y]);
+		cells[x][y] = !cells[x][y];
+		cellPanel.repaint();
 	}
 	
-	public void toggleCell(Cell cell) {
-		cell.setAlive(!cell.isAlive());
-	}
 /*	
 	public void update() {
 		for (int i=0;i<width;i++) {
@@ -260,11 +298,11 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		return height;
 	}
 	
-	public Cell[][] getCells() {
+	public boolean[][] getCells() {
 		return cells;
 	}
 	
-	public Cell getCell(int x, int y) {
+	public boolean getCell(int x, int y) {
 		return cells[x][y];
 	}
 
@@ -275,10 +313,12 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	public void clear() {
 		for (int i=0;i<width;i++) {
 			for (int j=0;j<height;j++) {
-				cells[i][j].setAlive(false);
+				cells[i][j] = false;
 				// Uncomment if you use animations cells[i][j].disposeAnimation();
 			}
 		}
+
+		cellPanel.repaint();
 	}
 	
 	@Override
@@ -288,11 +328,7 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 			public void run() {
 				Object src = e.getSource();
 				
-				if (src instanceof Cell) {
-					Cell c = (Cell)e.getSource();
-					
-					listener.handleEvent(new ToggleCellEvent(c));
-				} else if (src instanceof JComponent) {
+				if (src instanceof JComponent) {
 					JComponent jc = (JComponent)src;
 					
 					if (jc.getName().equals("gridRefresh")) {

@@ -1,5 +1,6 @@
 package a8;
 
+import java.awt.Point;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -48,15 +49,7 @@ public class Controller implements CellViewListener, CellObserver {
 
 	@Override
 	public synchronized void handleEvent(Event e) {
-		if (e.isCellEvent()) {
-			CellEvent ce = (CellEvent)e;
-			
-			if (ce.isToggleEvent()) {
-				ToggleCellEvent tc = (ToggleCellEvent)e;
-				
-				view.toggleCell(tc.getCell());
-			}
-		} else if (e.isUIEvent()) {
+		if (e.isUIEvent()) {
 			UIEvent ue = (UIEvent)e;
 			
 			if (ue.isGridEvent()) {
@@ -103,35 +96,23 @@ public class Controller implements CellViewListener, CellObserver {
 	}
 
 	private void advance() {
-		Thread a = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				final Cell[][] cells = view.getCells();
-				final int total = view.getGridWidth() * view.getGridHeight();
-				
-				for (int i=0;i<view.getGridWidth();i++) {
-					for (int j=0;j<view.getGridHeight();j++) {
-						model.evaluateCell(cells, i, j, total);
-					}
-				}
-			}
-		});
-		a.start();
+		final boolean[][] cells = view.getCells();
+		final int total = view.getGridWidth() * view.getGridHeight();
 		
-		try {
-			a.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		for (int i=0;i<view.getGridWidth();i++) {
+			for (int j=0;j<view.getGridHeight();j++) {
+				model.evaluateCell(cells, i, j, total);
+			}
 		}
 	}
 	
 	@Override
 	public void update(Model model) {
-		Map<Cell, Boolean> map = model.getMap();
+		Map<Point, Boolean> map = model.getMap();
 		
-		for (Entry<Cell, Boolean> entry : map.entrySet()) {
+		for (Entry<Point, Boolean> entry : map.entrySet()) {
 			if (entry.getValue())
-				view.toggleCell(entry.getKey());
+				view.toggleCell(entry.getKey().x, entry.getKey().y);
 		}
 	}
 	

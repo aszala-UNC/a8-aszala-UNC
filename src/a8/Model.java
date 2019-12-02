@@ -1,9 +1,7 @@
 package a8;
 
 import java.awt.Point;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Model {
@@ -21,9 +19,7 @@ public class Model {
 		cellMap = new HashMap<Point, Boolean>();
 	}
 	
-	public synchronized void evaluateCell(boolean[][] cells, int x, int y, int total) {
-		List<Boolean> neighbors = new ArrayList<>();
-		
+	public void evaluateCell(boolean[][] cells, int x, int y, int total) {
 		int px = x+1, sx = x-1;
 		int py = y+1, sy = y-1;
 		
@@ -33,35 +29,30 @@ public class Model {
 			if (sx < 0)
 				sx = cells.length-1;
 
-			if (py >= cells[x].length)
+			if (x < cells.length && py >= cells[x].length)
 				py = 0;
 			if (sy < 0)
 				sy = cells[x].length-1;
 		}
 		
-		if (px < cells.length)
-			neighbors.add(cells[px][y]);
-		if (sx >= 0)
-			neighbors.add(cells[sx][y]);
-		if (py < cells[x].length)
-			neighbors.add(cells[x][py]);
-		if (sy >= 0)
-			neighbors.add(cells[x][sy]);
-		if (px < cells.length && py < cells[x].length)
-			neighbors.add(cells[px][py]);
-		if (sx >= 0 && sy >= 0)
-			neighbors.add(cells[sx][sy]);
-		if (px < cells.length && sy >= 0)
-			neighbors.add(cells[px][sy]);
-		if (sx >= 0 && py < cells[x].length)
-			neighbors.add(cells[sx][py]);
-		
 		int alive = 0;
 		
-		for (boolean c : neighbors) {
-			if (c)
-				alive++;
-		}
+		if (px < cells.length && cells[px][y])
+			alive++;
+		if (sx >= 0 && cells[sx][y])
+			alive++;
+		if (py < cells[x].length && cells[x][py])
+			alive++;
+		if (sy >= 0 && cells[x][sy])
+			alive++;
+		if (px < cells.length && py < cells[x].length && cells[px][py])
+			alive++;
+		if (sx >= 0 && sy >= 0 && cells[sx][sy])
+			alive++;
+		if (px < cells.length && sy >= 0 && cells[px][sy])
+			alive++;
+		if (sx >= 0 && py < cells[x].length && cells[sx][py])
+			alive++;
 		
 		boolean shouldLive = false;
 		
@@ -103,7 +94,7 @@ public class Model {
 		this.survive = survive;
 	}
 	
-	public void notifyObserver() {
+	public synchronized void notifyObserver() {
 		observer.update(this);
 		count = 0;
 		cellMap.clear();

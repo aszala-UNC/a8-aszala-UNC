@@ -19,6 +19,7 @@ public class Main {
 		main_frame.setContentPane(view);
 		
 		main_frame.pack();
+		main_frame.setLocationRelativeTo(null);
 		main_frame.setVisible(true);
 	}
 	

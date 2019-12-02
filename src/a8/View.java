@@ -1,36 +1,38 @@
 package a8;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.util.ConcurrentModificationException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 @SuppressWarnings("serial")
 public class View extends JPanel implements ActionListener, ItemListener, ChangeListener {
 	
-	private int width = 10, height = width;
+	private int width = 10, height = width, cellWidth = 0, cellHeight = 0;
 	
 	private static final int MAX_WIDTH = 1000, MAX_HEIGHT = 1000;
 	
@@ -39,39 +41,24 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	private CellViewListener listener;
 	
 	private JPanel cellPanel, controls;
-	private JFrame rename;
 	private JSpinner surviveThreshold, birthThreshold, widthSpinner, heightSpinner;
 	private JCheckBox torus;
 	private JLabel speedText;
 	private JButton start, stop;
 	
+	private Dimension size = new Dimension(0, 0);
+	
+	private Set<Point> pointsAlive = new HashSet<>();
+	private Point highlight = new Point(-1000, -1000);
+	
 	public View() {
+		/* Uncomment for Better UI
 		try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel"); 
         } catch (Exception e) { 
-            System.out.println("Look and Feel not set"); 
-        } 
-		
-		rename = new JFrame("Loading");
-		rename.setLocation(150, 250);
-		
-		JPanel p = new JPanel();
-		p.setBackground(Color.black);
-		p.setPreferredSize(new Dimension(100, 100));
-		p.setLayout(new BorderLayout());
-		
-		JLabel loadingText = new JLabel("Loading");
-		loadingText.setForeground(Color.white);
-		
-		p.add(loadingText, BorderLayout.CENTER);
-		
-		rename.setContentPane(p);
-		rename.setAlwaysOnTop(true);
-		rename.setUndecorated(true);
-		rename.pack();
-
-		rename.revalidate();
-		rename.repaint();
+            System.out.println("Look and Feel not set");
+        }
+        */
 		
 		JLabel widthText = new JLabel("Grid Width (10-500):");
 		JLabel heightText = new JLabel("Grid Height (10-500):");
@@ -80,28 +67,47 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 			@Override
 			public void paintComponent(Graphics g) {
 				Graphics2D g2d = (Graphics2D)g;
+				
+				g2d.setColor(Color.gray);
+				g2d.fillRect(0, 0, MAX_WIDTH, MAX_HEIGHT);
+				
+				g2d.setColor(Color.white);
+				g2d.fillRect(0, 0, cellWidth, cellHeight);
 
-				Dimension size = new Dimension(MAX_WIDTH / width, MAX_HEIGHT / height);
+				/*
+				g2d.setColor(Color.gray);
 				
 				int x = 0, y = 0;
 				
-		        for (int i=0;i<width;i++) {
-					for (int j=0;j<height;j++) {
-						if (cells[i][j])
-							g2d.setColor(Color.black);
-						else
-							g2d.setColor(Color.white);
-						
-						g2d.fillRect(x, y, (int)size.getWidth(), (int)size.getHeight());
-						g2d.setColor(Color.gray);
-						g2d.drawRect(x, y, (int)size.getWidth(), (int)size.getHeight());
-						
-						x += (int)size.getWidth();
+		        for (int i=0;i<cellWidth;i++) {
+		        	g2d.drawLine(x, 0, x, cellHeight);
+		        	
+		        	x += size.width;
+		        }
+				
+				for (int j=0;j<cellHeight;j++) {
+		        	g2d.drawLine(0, y, cellWidth, y);
+		        	
+		        	y += size.height;
+				}
+		        */
+				
+				g2d.setColor(Color.black);
+				g2d.drawRect(highlight.x, highlight.y, size.width, size.height);
+				
+				Iterator<Point> it = pointsAlive.iterator();
+				
+				while (it.hasNext()) {
+					Point p;
+					
+					try {
+						p = it.next();
+					} catch (ConcurrentModificationException e) {
+						break;
 					}
 					
-					y += (int)size.getHeight();
-					x = 0;
-		        }
+					g2d.fillRect(p.x, p.y, size.width, size.height);
+				}
 			}
 		};
 		cellPanel.setBackground(Color.black);
@@ -109,9 +115,31 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				int mx = e.getX(), my = e.getY();
-				int i = mx / (MAX_WIDTH / width), j = my / (MAX_HEIGHT / height);
+				int i = mx / size.width, j = my / size.height;
 				
 				cells[j][i] = !cells[j][i];
+				
+				if (cells[j][i])
+					pointsAlive.add(new Point(i * size.width, j * size.height));
+				else
+					pointsAlive.remove(new Point(i * size.width, j * size.height));
+					
+				cellPanel.repaint();
+			}
+			@Override
+			public void mouseExited(MouseEvent e) {
+				highlight = new Point(-1000, -100);
+				
+				cellPanel.repaint();
+			}
+		});
+		cellPanel.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				int mx = e.getX(), my = e.getY();
+				int i = mx / size.width, j = my / size.height;
+				
+				highlight = new Point(i * size.width, j * size.height);
 				
 				cellPanel.repaint();
 			}
@@ -197,7 +225,6 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	private void setButtonValues(JButton button) {
 		button.addActionListener(this);
 		button.setFocusPainted(false);
-		//button.setBorderPainted(false);
 	}
 	
 	public synchronized void changeGridSize(int width, int height) {
@@ -214,74 +241,28 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	}
 	
 	private synchronized void populateGrid() {
-		/*cellPanel.removeAll();
-		
-		cellPanel.setLayout(new GridLayout(height, width));
-		
-		cellPanel.setBackground(Color.black);
-		*/
 		cellPanel.setPreferredSize(new Dimension(MAX_WIDTH, MAX_HEIGHT));
 		cellPanel.repaint();
-		repaint();
-		Main.main_frame.revalidate();
 		
-		//final ActionListener a = this;
+		size = new Dimension(MAX_WIDTH / width, MAX_HEIGHT / height);
 		
-		rename.setVisible(true);
+		cellWidth = cells.length * size.width;
+		cellHeight = cells[0].length * size.height;
 		
-		for (Component c : controls.getComponents())
-			c.setEnabled(false);
-		
-		Thread loadingThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
-		        for (int i=0;i<width;i++) {
-					for (int j=0;j<height;j++) {
-						/*Cell c = new Cell();
-						c.addActionListener(a);
-						
-						c.setPreferredSize(size);
-						
-						c.setFocusable(false);
-					    c.setFocusPainted(false);
-					    c.setBorderPainted(false);
-					    
-					    cellPanel.add(c);
-					    */
-					    cells[i][j] = false;
-					}
-				}
-		        
-				rename.setVisible(false);
-		        
-				cellPanel.revalidate();
-				
-				for (Component c : controls.getComponents())
-					c.setEnabled(true);
-				
-				start.setEnabled(true);
-				stop.setEnabled(false);
-			}
-		});
-		loadingThread.start();
+		clear();
+        
+		start.setEnabled(true);
+		stop.setEnabled(false);
 	}
 
 	public void toggleCell(int x, int y) {
 		cells[x][y] = !cells[x][y];
-		cellPanel.repaint();
-	}
-	
-/*	
-	public void update() {
-		for (int i=0;i<width;i++) {
-			for (int j=0;j<height;j++) {
-				cells[i][j].repaint();
-			}
-		}
 		
-		repaint();
+		if (cells[x][y])
+			pointsAlive.add(new Point(y * size.width, x * size.height));
+		else
+			pointsAlive.remove(new Point(y * size.width, x * size.height));
 	}
-	*/
 	
 	public void updateSpeedDisplay(int speed) {
 		if (speed == 1000)
@@ -310,55 +291,55 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		this.listener = listener;
 	}
 	
+	public void update() {
+		cellPanel.repaint();
+	}
+	
 	public void clear() {
-		for (int i=0;i<width;i++) {
-			for (int j=0;j<height;j++) {
+
+		for (int j=0;j<height;j++) {
+			for (int i=0;i<width;i++) {
 				cells[i][j] = false;
-				// Uncomment if you use animations cells[i][j].disposeAnimation();
 			}
 		}
 
+		pointsAlive.clear();
+		
 		cellPanel.repaint();
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		Thread handler = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				Object src = e.getSource();
+		Object src = e.getSource();
+		
+		if (src instanceof JComponent) {
+			JComponent jc = (JComponent)src;
+			
+			if (jc.getName().equals("gridRefresh")) {
+				listener.handleEvent(new GridEvent(GridEvent.Intent.INTENT_REFRESH, (Integer)birthThreshold.getValue(), (Integer)surviveThreshold.getValue(),
+						(Integer)widthSpinner.getValue(), (Integer)heightSpinner.getValue()));
+			} else {
+				GridEvent.Intent intent = null;
 				
-				if (src instanceof JComponent) {
-					JComponent jc = (JComponent)src;
-					
-					if (jc.getName().equals("gridRefresh")) {
-						listener.handleEvent(new GridEvent(GridEvent.Intent.INTENT_REFRESH, (Integer)birthThreshold.getValue(), (Integer)surviveThreshold.getValue(),
-								(Integer)widthSpinner.getValue(), (Integer)heightSpinner.getValue()));
-					} else {
-						GridEvent.Intent intent = null;
-						
-						if (jc.getName().equals("randFill"))
-							intent = GridEvent.Intent.INTENT_RANDOM;
-						else if (jc.getName().equals("clear"))
-							intent = GridEvent.Intent.INTENT_CLEAR;
-						else if (jc.getName().equals("advance"))
-							intent = GridEvent.Intent.INTENT_ADVANCE;
-						else if (jc.getName().equals("start")) {
-							intent = GridEvent.Intent.INTENT_START_AUTO;
-							start.setEnabled(false);
-							stop.setEnabled(true);
-						} else if (jc.getName().equals("stop")) {
-							intent = GridEvent.Intent.INTENT_STOP_AUTO;
-							start.setEnabled(true);
-							stop.setEnabled(false);
-						}
-						
-						listener.handleEvent(new GridEvent(intent));
-					}
+				if (jc.getName().equals("randFill"))
+					intent = GridEvent.Intent.INTENT_RANDOM;
+				else if (jc.getName().equals("clear"))
+					intent = GridEvent.Intent.INTENT_CLEAR;
+				else if (jc.getName().equals("advance"))
+					intent = GridEvent.Intent.INTENT_ADVANCE;
+				else if (jc.getName().equals("start")) {
+					intent = GridEvent.Intent.INTENT_START_AUTO;
+					start.setEnabled(false);
+					stop.setEnabled(true);
+				} else if (jc.getName().equals("stop")) {
+					intent = GridEvent.Intent.INTENT_STOP_AUTO;
+					start.setEnabled(true);
+					stop.setEnabled(false);
 				}
+				
+				listener.handleEvent(new GridEvent(intent));
 			}
-		});
-		handler.start();
+		}
 	}
 	
 	@Override

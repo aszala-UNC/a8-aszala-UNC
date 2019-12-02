@@ -1,17 +1,6 @@
 package a8;
 
-public abstract class Event {
-	
-	public boolean isCellEvent() {
-		return false;
-	}
-	
-	public boolean isUIEvent() {
-		return false;
-	}
-}
-
-abstract class UIEvent extends Event {
+public abstract class UIEvent {
 	
 	public boolean isSliderEvent() {
 		return false;
@@ -23,11 +12,6 @@ abstract class UIEvent extends Event {
 	
 	public boolean isCheckBoxEvent() {
 		return false;
-	}
-	
-	@Override
-	public boolean isUIEvent() {
-		return true;
 	}
 	
 }

@@ -283,10 +283,6 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		return cells;
 	}
 	
-	public boolean getCell(int x, int y) {
-		return cells[x][y];
-	}
-
 	public void setListener(CellViewListener listener) {
 		this.listener = listener;
 	}
@@ -296,7 +292,6 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	}
 	
 	public void clear() {
-
 		for (int j=0;j<height;j++) {
 			for (int i=0;i<width;i++) {
 				cells[i][j] = false;

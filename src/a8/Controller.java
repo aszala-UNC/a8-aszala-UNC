@@ -101,7 +101,7 @@ public class Controller implements CellViewListener, CellObserver {
 	private void advance() {
 		final boolean[][] cells = view.getCells();
 		final int total = view.getGridWidth() * view.getGridHeight();
-
+		
 		for (int j=0;j<view.getGridHeight();j++) {
 			for (int i=0;i<view.getGridWidth();i++) {
 				model.evaluateCell(cells, i, j, total);

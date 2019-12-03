@@ -84,11 +84,11 @@ public class Controller implements CellViewListener, CellObserver {
 					}
 				});
 				a.start();
-			} else if (ge.getIntent() == GridEvent.Intent.INTENT_START_AUTO) {
+			} else if (ge.getIntent() == GridEvent.Intent.INTENT_START_AUTO)
 				runAuto = true;
-			}  else if (ge.getIntent() == GridEvent.Intent.INTENT_STOP_AUTO) {
+			else if (ge.getIntent() == GridEvent.Intent.INTENT_STOP_AUTO)
 				runAuto = false;
-			}
+				
 		} else if (ue.isCheckBoxEvent()) {
 			model.toggleTorus(((CheckBoxEvent)(ue)).getValue());
 		} else if (ue.isSliderEvent()) {

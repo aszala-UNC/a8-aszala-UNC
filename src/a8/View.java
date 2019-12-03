@@ -299,7 +299,6 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		}
 
 		pointsAlive.clear();
-		
 		cellPanel.repaint();
 	}
 	

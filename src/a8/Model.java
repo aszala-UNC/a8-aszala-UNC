@@ -9,7 +9,7 @@ public class Model {
 	private CellObserver observer;
 	private int count = 0;
 	
-	private int birth = 2, survive = 3;
+	private int lowBirth = 2, lowSurvive = 3, highBirth = 3, highSurvive = 3;
 	
 	private boolean torus = false;
 	
@@ -56,13 +56,13 @@ public class Model {
 		
 		boolean shouldLive = false;
 		
-		if (alive < birth)
+		if (alive < lowBirth)
 			shouldLive = false;
-		else if (alive == birth && !cells[x][y])
+		else if (alive == lowBirth && !cells[x][y])
 			shouldLive = false;
-		else if (alive == birth || alive == survive)
+		else if ((alive >= lowBirth && alive <= highBirth) || alive == lowSurvive)
 			shouldLive = true;
-		else if (alive > survive)
+		else if (alive > highSurvive)
 			shouldLive = false;
 		
 		/* Uncomment to get fancy patterns
@@ -89,9 +89,11 @@ public class Model {
 		torus = value;
 	}
 	
-	public void setSurviveAndBirthValues(int birth, int survive) {
-		this.birth = birth;
-		this.survive = survive;
+	public void setSurviveAndBirthValues(int lowBirth, int lowSurvive, int highBirth, int highSurvive) {
+		this.lowBirth = lowBirth;
+		this.lowSurvive = lowSurvive;
+		this.highBirth = highBirth;
+		this.highSurvive = highSurvive;
 	}
 	
 	public synchronized void notifyObserver() {

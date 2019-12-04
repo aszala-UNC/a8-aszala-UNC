@@ -41,7 +41,7 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 	private CellViewListener listener;
 	
 	private JPanel cellPanel, controls;
-	private JSpinner surviveThreshold, birthThreshold, widthSpinner, heightSpinner;
+	private JSpinner lowSurviveThreshold, lowBirthThreshold, highSurviveThreshold, highBirthThreshold, widthSpinner, heightSpinner;
 	private JCheckBox torus;
 	private JLabel speedText;
 	private JButton start, stop;
@@ -168,13 +168,20 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		
 		Dimension textBoxDimen = new Dimension(50, 30);
 		
-		SpinnerModel survive = new SpinnerNumberModel(3, 1, 8, 1);
-		SpinnerModel birth = new SpinnerNumberModel(2, 1, 8, 1);
+		SpinnerModel lowSurvive = new SpinnerNumberModel(3, 1, 8, 1);
+		SpinnerModel lowBirth = new SpinnerNumberModel(2, 1, 8, 1);
+		SpinnerModel highSurvive = new SpinnerNumberModel(3, 1, 8, 1);
+		SpinnerModel highBirth = new SpinnerNumberModel(3, 1, 8, 1);
 		
-		surviveThreshold = new JSpinner(survive);
-		surviveThreshold.setPreferredSize(textBoxDimen);
-		birthThreshold = new JSpinner(birth);
-		birthThreshold.setPreferredSize(textBoxDimen);
+		lowSurviveThreshold = new JSpinner(lowSurvive);
+		lowSurviveThreshold.setPreferredSize(textBoxDimen);
+		lowBirthThreshold = new JSpinner(lowBirth);
+		lowBirthThreshold.setPreferredSize(textBoxDimen);
+		
+		highSurviveThreshold = new JSpinner(highSurvive);
+		highSurviveThreshold.setPreferredSize(textBoxDimen);
+		highBirthThreshold = new JSpinner(highBirth);
+		highBirthThreshold.setPreferredSize(textBoxDimen);
 		
 		torus = new JCheckBox("Torus Mode");
 		torus.addItemListener(this);
@@ -204,10 +211,14 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 		controls.add(widthSpinner);
 		controls.add(heightText);
 		controls.add(heightSpinner);
-		controls.add(new JLabel("Survive Threshold (1-8):"));
-		controls.add(surviveThreshold);
-		controls.add(new JLabel("Birth Threshold (1-8):"));
-		controls.add(birthThreshold);
+		controls.add(new JLabel("Low Survive (1-8):"));
+		controls.add(lowSurviveThreshold);
+		controls.add(new JLabel("High Survive (1-8):"));
+		controls.add(highSurviveThreshold);
+		controls.add(new JLabel("Low Birth (1-8):"));
+		controls.add(lowBirthThreshold);
+		controls.add(new JLabel("High Birth (1-8):"));
+		controls.add(highBirthThreshold);
 		controls.add(refresh);
 		controls.add(random);
 		controls.add(clear);
@@ -310,7 +321,8 @@ public class View extends JPanel implements ActionListener, ItemListener, Change
 			JComponent jc = (JComponent)src;
 			
 			if (jc.getName().equals("gridRefresh")) {
-				listener.handleEvent(new GridEvent(GridEvent.Intent.INTENT_REFRESH, (Integer)birthThreshold.getValue(), (Integer)surviveThreshold.getValue(),
+				listener.handleEvent(new GridEvent(GridEvent.Intent.INTENT_REFRESH, (Integer)lowBirthThreshold.getValue(), (Integer)lowSurviveThreshold.getValue(),
+						(Integer)highBirthThreshold.getValue(), (Integer)highSurviveThreshold.getValue(),
 						(Integer)widthSpinner.getValue(), (Integer)heightSpinner.getValue()));
 			} else {
 				GridEvent.Intent intent = null;

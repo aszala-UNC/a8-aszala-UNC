@@ -61,8 +61,8 @@ public class Controller implements CellViewListener, CellObserver {
 				runAuto = false;
 				view.clear();
 				
-				model.setSurviveAndBirthValues(ge.getData()[0], ge.getData()[1]);
-				view.changeGridSize(ge.getData()[2], ge.getData()[3]);
+				model.setSurviveAndBirthValues(ge.getData()[0], ge.getData()[1], ge.getData()[2], ge.getData()[3]);
+				view.changeGridSize(ge.getData()[4], ge.getData()[5]);
 			} else if (ge.getIntent() == GridEvent.Intent.INTENT_RANDOM) {
 				view.clear();
 				
